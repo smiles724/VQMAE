@@ -1,0 +1,67 @@
+model:
+  type: surfformerv2
+  masif:
+    resolution: residue
+    nearest_neighbors:
+      res_res: 4              # 4 is better than 16
+      res_point: 1
+    atom_dims: 16
+    res_dims: 16              # Number of atom types and dimension of resulting chemical features, default: 6
+    hidden_dims: 16           # Number of input features, default: 8
+    ori_dim: 16               # Number of hidden units for the orientation score MLP
+    radius: 9.0               # Radius to use for the convolution
+    dropout: 0.0
+    n_layers: 1               # default: 1
+  transformer:
+    n_heads: 8
+    n_layers: 1
+    dropout: 0.1
+  patch_setup:
+    patch_ratio: 0.02
+    n_patches: 500
+    n_pts_per_patch: 50
+  decoder:
+    foldingnet: False
+  mask_ratio: 0.15                    # TODO: which ratio is the best?
+  vocab_size: 10000          # the larger the better
+
+data:
+  pdbredo_dir: ./data/pdb_redo/cif
+  clusters_path: ./data/pdbredo_clusters.txt
+  splits_path: ./data/pdbredo_splits.txt
+  processed_dir: ./data/PDB_REDO_processed
+  surface:
+    resolution: 1.0    # Resolution of the generated point cloud
+    distance: 1.05     # Distance parameter in structures generation
+    variance: 0.1      # Variance parameter in structures generation
+    sup_sampling: 10   # Sup-sampling ratio around atoms, default: 20
+
+train:
+  max_iters: 50_000
+  val_freq: 1000
+  batch_size: 16
+  seed: 2023
+  max_grad_norm: 100.0
+  optimizer:
+    type: adam
+    lr: 1.e-4
+    weight_decay: 0.0005
+    beta1: 0.9
+    beta2: 0.999
+  scheduler:
+    type: plateau
+    factor: 0.8
+    patience: 5
+    min_lr: 1.e-7
+  kld_weight:
+    start: 0
+    target: 0.1
+    ntime_1: 10000
+    ntime_2: 20000
+  h_weight:
+    hbond: 1.0
+    hphobicity: 0.5
+  temp:
+    start: 1
+    target: 0.0625
+    ntime: 10000

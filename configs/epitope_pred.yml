@@ -1,0 +1,47 @@
+model:
+  type: ga
+  checkpoint:
+    path: ../RDE-PPI/trained_models/RDE.pt
+    type: RDE
+  resolution: backbone+CB
+  use_plm: True
+  use_sasa: True
+  res_feat_dim: 128
+  pair_feat_dim: 64
+  num_layers: 3
+  loss_weight:
+    pos: 1.0
+    neg: 1.0
+
+dataset:
+  processed_dir: ./data/processed
+  relax_struct: False
+  pred_struct: False
+  transform:
+    - type: select_and_merge_chains
+      use_sasa: True
+      max_len: 1000
+      chains: antigen      # +heavy+light
+    - type: select_atom    # first select chain, then select atom
+      resolution: backbone+CB
+
+train:
+  loss_weights:
+    ep: 1.0
+  max_iters: 50_000
+  val_freq: 500
+  batch_size: 4
+  seed: 2023
+  max_grad_norm: 100.0
+  optimizer:
+    type: adam
+    lr: 1.e-4
+    weight_decay: 0.0
+    beta1: 0.9
+    beta2: 0.999
+  scheduler:
+    type: plateau
+    factor: 0.8
+    patience: 5
+    min_lr: 5.e-6
+
