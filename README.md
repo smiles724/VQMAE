@@ -1,5 +1,5 @@
 # 🐾Surface-VQMAE🐾 
-This is the official repo of **urface-VQMAE: Vector-quantized Masked Auto-encoders on Molecular Surfaces** (**ICML 2024**), 
+This is the official repo of **Surface-VQMAE: Vector-quantized Masked Auto-encoders on Molecular Surfaces** (**ICML 2024**), 
 where a novel self-supervised algorithm is proposed to employ the abundant unlabeled molecular surfaces. 
 **Note:** there are some improvements and differences from the initial version described in the ICML paper.
 👉 (1) We provide a PyMol-based mechanism to produce protein surfaces, in additional to the fast-sampling method in dMaSIF. 
