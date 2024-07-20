@@ -16,13 +16,13 @@ from tqdm import tqdm as tq
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from ep_ab.datasets import SAbDabDataset, PaddingCollate
-from ep_ab.datasets.redo import PDB_REDO_Dataset
-from ep_ab.models import get_model
-from ep_ab.models.surfformer_v1 import index_points
-from ep_ab.models.surfformer_v2 import ChamferDistance
-from ep_ab.utils.misc import seed_all, load_config
-from ep_ab.utils.train import *
+from src.datasets import SAbDabDataset, Collate
+from src.datasets.redo import PDB_REDO_Dataset
+from src.models import get_model
+from src.models.surfformer_v1 import index_points
+from src.models.surfformer_v2 import ChamferDistance
+from src.utils.misc import seed_all, load_config
+from src.utils.train import *
 
 
 def dataset_statstics():
@@ -77,7 +77,7 @@ def codebook_analysis():
     seed_all(cfg_model.train.seed)
     test_dataset = SAbDabDataset(split=args.split, processed_dir=cfg_dataset.dataset.processed_dir, surface=cfg_dataset.dataset.get('surface', None),
                                  multiEpitope_csv=args.multiEpitope_csv)
-    test_loader = DataLoader(test_dataset, batch_size=cfg_dataset.train.batch_size * 2, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=cfg_dataset.train.batch_size * 2, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
 
     # Model
     model = get_model(cfg_model.model).to(args.device)
@@ -143,7 +143,7 @@ def reconstruction_analysis():
     seed_all(cfg_model.train.seed)
     test_dataset = PDB_REDO_Dataset(split=args.split, pdbredo_dir=cfg_dataset.data.pdbredo_dir, clusters_path=cfg_dataset.data.clusters_path,
                                     splits_path=cfg_dataset.data.splits_path, processed_dir=cfg_dataset.data.processed_dir, surface=cfg_dataset.data.surface)
-    collate_fn = PaddingCollate(vae=True, min_pts=1 / (cfg_dataset.model.patch_setup.patch_ratio * cfg_dataset.model.mask_ratio))
+    collate_fn = Collate(vae=True, min_pts=1 / (cfg_dataset.model.patch_setup.patch_ratio * cfg_dataset.model.mask_ratio))
     test_loader = DataLoader(test_dataset, cfg_dataset.train.batch_size * 2, shuffle=False, collate_fn=collate_fn, num_workers=args.num_workers)
 
     # Model
@@ -233,7 +233,7 @@ def attention_visualize():
     model = get_model(cfg.model).to(args.device)
     model.load_state_dict(ckpt['model'], strict=False)
     test_dataset = SAbDabDataset(split=args.split, processed_dir=cfg.dataset.processed_dir, surface=cfg.dataset.get('surface', None), multiEpitope_csv=args.multiEpitope_csv)
-    test_loader = DataLoader(test_dataset, batch_size=1, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=1, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
 
     model.eval()
     with torch.no_grad():
@@ -305,7 +305,7 @@ def infer():
     model = get_model(cfg.model).to(args.device)
     model.load_state_dict(ckpt['model'], strict=False)
     test_dataset = SAbDabDataset(processed_dir=cfg.dataset.processed_dir, surface=cfg.dataset.get('surface', None), test_list=args.pdbs.split(','))
-    test_loader = DataLoader(test_dataset, batch_size=1, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=1, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
 
     model.eval()
     with torch.no_grad():

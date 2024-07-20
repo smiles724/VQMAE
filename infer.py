@@ -1,15 +1,17 @@
 import argparse
+import torch
 import os
-
+import numpy as np
 from pymol import cmd
 from torch_geometric.data import Batch
 
-from ep_ab.models import get_model
-from ep_ab.utils.convert_pdb2npy import load_structure, num2ele
-from ep_ab.utils.misc import seed_all
-from ep_ab.utils.protein.constants import AA
-from ep_ab.utils.protein.points import ProteinPairData
-from ep_ab.datasets import load_point_cloud_by_file_extension
+from src.models import get_model
+from src.utils.convert_pdb2npy import load_structure
+from src.utils.misc import seed_all
+from src.utils.protein.constants import AA, num2name, num2ele
+from src.utils.protein.points import ProteinPairData
+from src.datasets import load_point_cloud_by_file_extension
+from src.utils.train import recursive_to
 
 Tensor, tensor = torch.LongTensor, torch.FloatTensor
 
@@ -74,7 +76,7 @@ def infer():
         l_10 = int(len(gt) * 0.1)
         idx = sorted(range(len(res_pred_)), key=lambda i: res_pred_[i])[-l_10:]
         score = (gt[idx] < 4).sum() / l_10
-        print(f'L/10: {score}')    # TODO: why randomness? due to surface generation?
+        print(f'L/10: {score}')    # TODO: randomness due to surface generation
 
     atomxyz, atomtypes, restypes, atom_res = atomxyz_receptor.numpy(), atomtypes_receptor.numpy(), restypes_receptor.numpy(), r['atom_res']
     template = "{:6s}{:5d} {:^4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}          {:>2s}{:2s}\n"
@@ -86,8 +88,8 @@ def infer():
                 break
             xyz = atomxyz[i].tolist()
             atomtype = np.argmax(atomtype)
-            f.write(template.format("ATOM", i + 1, num2ele[atomtype], '', resname, 'A', atom_res[i] + 1, '', xyz[0], xyz[1], xyz[2], 1.00,
-                                    res_pred_[atom_res[i]] * 100, num2ele[atomtype], ''))
+            f.write(template.format("ATOM", i + 1, num2name[atomtype], '', resname, 'A', atom_res[i] + 1, '', xyz[0], xyz[1], xyz[2], 1.00,
+                                    res_pred_[atom_res[i]], num2ele[atomtype], ''))
     print('Finished.')
 
 

@@ -1,5 +1,5 @@
 # 🐾Surface-VQMAE🐾 
-This is the official repo of **urface-VQMAE: Vector-quantized Masked Auto-encoders on Molecular Surfaces** (**ICML 2024**), 
+This is the official repo of **Surface-VQMAE: Vector-quantized Masked Auto-encoders on Molecular Surfaces** (**ICML 2024**), 
 where a novel self-supervised algorithm is proposed to employ the abundant unlabeled molecular surfaces. 
 **Note:** there are some improvements and differences from the initial version described in the ICML paper.
 👉 (1) We provide a PyMol-based mechanism to produce protein surfaces, in additional to the fast-sampling method in dMaSIF. 
@@ -12,10 +12,11 @@ where a novel self-supervised algorithm is proposed to employ the abundant unlab
 We use Python 3.7.11 with cuda-version 12.0. Please run the following command to install necessary packages. 
 ```bash
 pip install -r requirements.txt
-cd ./ep_ab/utils/chamfer_dist
+cd ./src/utils/chamfer_dist
 python setup.py install --user
 ```
 [//]: # (pip3 freeze > requirements.txt)
+A light-weighted pretrained model weight can be found in the folder `weight/light.pt`. 
 
 ### Datasets 
 We use [`PDB-REDO`](https://pdb-redo.eu/) as the pretraining resource. You can run to download the entire dataset:

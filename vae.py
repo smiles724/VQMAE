@@ -12,11 +12,11 @@ from tqdm import tqdm as tq  # tqdm.auto -> multiprocess error
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-from ep_ab.utils.train import *
-from ep_ab.models import get_model
-from ep_ab.datasets import PaddingCollate
-from ep_ab.datasets.redo import PDB_REDO_Dataset
-from ep_ab.utils.misc import inf_iterator, load_config, seed_all, get_logger, get_new_log_dir
+from src.utils.train import *
+from src.models import get_model
+from src.datasets import Collate
+from src.datasets.redo import PDB_REDO_Dataset
+from src.utils.misc import inf_iterator, load_config, seed_all, get_logger, get_new_log_dir
 
 
 def compute_loss(loss_dict, kld_weight, h_weight, niter):
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     dataset_ = functools.partial(PDB_REDO_Dataset, pdbredo_dir=config.data.pdbredo_dir, clusters_path=config.data.clusters_path, splits_path=config.data.splits_path,
                                  processed_dir=config.data.processed_dir, surface=config.data.surface)
     train_dataset, val_dataset = dataset_('train'), dataset_('val')
-    collate_fn = PaddingCollate(vae=True, min_pts=1 / (config.model.patch_setup.patch_ratio * config.model.mask_ratio))
+    collate_fn = Collate(vae=True, min_pts=1 / (config.model.patch_setup.patch_ratio * config.model.mask_ratio))
     train_loader = DataLoader(train_dataset, config.train.batch_size, shuffle=True, collate_fn=collate_fn, num_workers=args.num_workers)
     val_loader = DataLoader(val_dataset, config.train.batch_size * 2, shuffle=False, collate_fn=collate_fn, num_workers=args.num_workers)
     train_iterator = inf_iterator(train_loader)

@@ -14,11 +14,11 @@ from tqdm import tqdm as tq   # tqdm.auto -> multiprocess error
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-from ep_ab.datasets import SAbDabDataset, PaddingCollate
-from ep_ab.models import get_model
-from ep_ab.utils.misc import *
-from ep_ab.utils.train import *
-from ep_ab.utils.transforms import get_transform
+from src.datasets import SAbDabDataset, Collate
+from src.models import get_model
+from src.utils.misc import *
+from src.utils.train import *
+from src.utils.transforms import get_transform
 import warnings
 warnings.filterwarnings("ignore")   # ignore warning for calculating F1 scores
 
@@ -78,10 +78,10 @@ def evaluation(it, loader, mode='val'):
                             resxyz_ligand = batch['resxyz_ligand'][batch['resxyz_ligand_batch'] == k]
                             _, patch_idx = torch.cdist(patch_xyz_coarse, resxyz_receptor).min(0)
 
-                            res_pred_ = output['ep_pred_coarse'][batch_idx == k][patch_idx]
-                            xyz_receptor = batch['xyz_receptor'][batch['xyz_receptor_batch'] == k]
-                            res_idx = torch.cdist(xyz_receptor, resxyz_receptor).min(0)[0] > 2 + 1.05  # 2A for buried residue to the surface point
-                            res_pred_[res_idx] = 0
+                            res_pred_ = output['ep_pred_coarse'][batch_idx == k][patch_idx]   # assign the closest patch's prediction to residues
+                            # xyz_receptor = batch['xyz_receptor'][batch['xyz_receptor_batch'] == k]
+                            # res_idx = torch.cdist(xyz_receptor, resxyz_receptor).min(0)[0] > 2 + 1.05  # 2A for buried residue to the surface point
+                            # res_pred_[res_idx] = 0
 
                             res_pred.append(res_pred_.cpu().numpy())
                             res_true.append((torch.cdist(resxyz_receptor, resxyz_ligand).min(-1)[0] < cfg.dataset.intf_cutoff_res).cpu().numpy())
@@ -172,8 +172,8 @@ if __name__ == '__main__':
     train_set = dataset_(split='train', relax_struct=cfg.dataset.relax_struct, pred_struct=cfg.dataset.pred_struct, )
     val_set = dataset_(split='val', relax_struct=cfg.dataset.relax_struct, pred_struct=cfg.dataset.pred_struct, )
 
-    train_iterator = inf_iterator(DataLoader(train_set, batch_size=cfg.train.batch_size, collate_fn=PaddingCollate(max_pts=cfg.train.max_pts), shuffle=True, num_workers=args.num_workers))
-    val_loader = DataLoader(val_set, batch_size=cfg.train.batch_size * 2, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+    train_iterator = inf_iterator(DataLoader(train_set, batch_size=cfg.train.batch_size, collate_fn=Collate(max_pts=cfg.train.max_pts), shuffle=True, num_workers=args.num_workers))
+    val_loader = DataLoader(val_set, batch_size=cfg.train.batch_size, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
     logger.info('Train %d | Val %d' % (len(train_set), len(val_set)))
     logger.info('Building model...')
     if args.ckpt is not None:  # Fine-tune
@@ -215,7 +215,7 @@ if __name__ == '__main__':
         ckpt = torch.load(os.path.join(ckpt_dir, '%d.pt' % best_i), map_location=args.device)
         model.load_state_dict(ckpt['model'])
         test_dataset = dataset_(split='test', relax_struct=False, pred_struct=False)
-        test_loader = DataLoader(test_dataset, batch_size=cfg.train.batch_size * 2, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+        test_loader = DataLoader(test_dataset, batch_size=cfg.train.batch_size * 2, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
         test_out, test_ep_true_all, test_ep_pred_all = evaluation(0, test_loader, mode='test')
 
         precision_all_0, recall_all_0, thresholds_all_0 = precision_recall_curve(test_ep_true_all, test_ep_pred_all)
@@ -224,14 +224,14 @@ if __name__ == '__main__':
         if cfg.model.type != 'ga': sys.exit()
 
         test_relax_dataset = dataset_(split='test', relax_struct=True, pred_struct=False)
-        test_relax_loader = DataLoader(test_relax_dataset, batch_size=cfg.train.batch_size * 2, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+        test_relax_loader = DataLoader(test_relax_dataset, batch_size=cfg.train.batch_size * 2, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
         test_out, test_ep_true_all, test_ep_pred_all = evaluation(0, test_relax_loader, mode='test')
         precision_all_1, recall_all_1, thresholds_all_1 = precision_recall_curve(test_ep_true_all, test_ep_pred_all)
         logger.info('[Test on Relax] ROCAUC %.3f | AUCPR %.3f | Precision %.3f | Recall %.3f | BAcc %.3f | F1 %.3f | L/10 %.3f' % (
             test_out['roc_auc'], test_out['au_prc'], test_out['precision'], test_out['recall'], test_out['balanced_acc'], test_out['f1'], test_out['l/10']))
 
         test_pred_dataset = dataset_(split='test', relax_struct=False, pred_struct=True)
-        test_pred_loader = DataLoader(test_pred_dataset, batch_size=cfg.train.batch_size * 2, collate_fn=PaddingCollate(), shuffle=False, num_workers=args.num_workers)
+        test_pred_loader = DataLoader(test_pred_dataset, batch_size=cfg.train.batch_size * 2, collate_fn=Collate(), shuffle=False, num_workers=args.num_workers)
         test_out, test_ep_true_all, test_ep_pred_all = evaluation(0, test_pred_loader, mode='test')
         precision_all_2, recall_all_2, thresholds_all_2 = precision_recall_curve(test_ep_true_all, test_ep_pred_all)
         logger.info('[Test on Pred] ROCAUC %.3f | AUCPR %.3f | Precision %.3f | Recall %.3f | BAcc %.3f | F1 %.3f | L/10 %.3f' % (

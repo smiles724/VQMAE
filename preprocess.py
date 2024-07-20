@@ -16,7 +16,7 @@ from Bio.PDB import Select
 from Bio.PDB.PDBIO import PDBIO
 from tqdm.auto import tqdm
 
-from ep_ab.utils.protein import constants, parsers
+from src.utils.protein import constants, parsers
 
 
 def nan_to_empty_string(val):
