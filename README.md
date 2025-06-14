@@ -5,7 +5,7 @@ where a novel self-supervised algorithm is proposed to employ the abundant unlab
 👉 (1) We provide a PyMol-based mechanism to produce protein surfaces, in addition to the fast-sampling method in dMaSIF. 
 👉 (2) We modify the point cloud network and delete the calculation of tangent vectors since those tangent vectors are not equivariant.  
 
-<p align="center"><img src="model.png" alt="drawing" width="450"/></p>
+<p align="center"><img src="model.png" alt="drawing" width="850"/></p>
 
 ## Install
 ### Environment
